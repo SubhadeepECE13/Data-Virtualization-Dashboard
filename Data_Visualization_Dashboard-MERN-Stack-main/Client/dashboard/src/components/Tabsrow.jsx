@@ -1,0 +1,81 @@
+import React, { useState } from 'react';
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
+import CardGroup from 'react-bootstrap/CardGroup';
+import Button from 'react-bootstrap/Button';
+import axios from 'axios';
+
+// Import from files
+import CardsForData from './CardsForData';
+import AccordionForCharts from './AccordionForCharts';
+import Filters from './Filters';
+
+const Tabsrow = ({ data, setMainData }) => {
+    // State to store the number of data cards we want to display at a time
+    const [limit, setLimit] = useState(5);
+    const [search, setSearch] = useState("");
+
+    const limitedData = data.slice(0, limit);
+
+    // Function to make an API call to get the filtered data
+    const handleSearchResult = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.get(`http://localhost:5000/api/data/any/${"country"}`, {
+                params: { query: search }
+            });
+            setMainData(response.data.data);
+            setSearch("");
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    return (
+     <div className='tabsClass'>
+            <Tabs defaultActiveKey="data" id="uncontrolled-tab-example" className="mb-3">
+                <Tab eventKey="data" title="Data">
+                    <form className="form-inline" onSubmit={handleSearchResult} style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+                        <input
+                            className="form-control mr-sm-2"
+                            type="search"
+                            placeholder="Search by Sector Name, Topic, Title, Pestle, Source, Insight, URL..."
+                            aria-label="Search"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{ marginRight: '1rem' }}
+                        />
+                        <button className="btn btn-primary my-2 my-sm-0" type="submit">Search</button>
+                    </form>
+                    <Filters setMainData={setMainData} />
+                    {limitedData.length === 0 ? (
+                        <div style={{ margin: '1rem' }}>No data found, or please wait for a while.</div>
+                    ) : (
+                        <CardGroup>
+                            {limitedData.map((e, i) => <CardsForData item={e} key={i} />)}
+                        </CardGroup>
+                    )}
+                    <Button variant="primary" onClick={() => setLimit(prev => prev + 5)}>Show More</Button>
+                </Tab>
+                <Tab eventKey="chart" title="Interactive Insights/Dashboard">
+                    <form className="form-inline" onSubmit={handleSearchResult} style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+                        <input
+                            className="form-control mr-sm-2"
+                            type="search"
+                            placeholder="Search by Sector Name, Topic, Title, Pestle, Source, Insight, URL..."
+                            aria-label="Search"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{ marginRight: '1rem' }}
+                        />
+                        <button className="btn btn-primary my-2 my-sm-0" type="submit">Search</button>
+                    </form>
+                    <Filters setMainData={setMainData} />
+                    <AccordionForCharts data={data} />
+                </Tab>
+            </Tabs>
+        </div>
+    );
+};
+
+export default Tabsrow;
